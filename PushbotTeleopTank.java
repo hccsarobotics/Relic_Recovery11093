@@ -98,11 +98,11 @@ public class PushbotTeleopTank extends OpMode{
         double right;
 
         // Run wheels in tank mode (note: The joystick goes negative when pushed forwards, so negate it)
-        left = -gamepad1.left_stick_y;
-        right = -gamepad1.right_stick_y;
+        //left = -gamepad1.left_stick_y;
+        //right = -gamepad1.right_stick_y;
 
-        robot.leftDrive.setPower(left);
-        robot.rightDrive.setPower(right);
+        //robot.leftDrive.setPower(left);
+        //robot.rightDrive.setPower(right);
 
         // Use gamepad left & right Bumpers to open and close the claw
         if (gamepad1.right_bumper)
@@ -125,8 +125,8 @@ public class PushbotTeleopTank extends OpMode{
 
         // Send telemetry message to signify robot running;
         telemetry.addData("claw",  "Offset = %.2f", clawOffset);
-        telemetry.addData("left",  "%.2f", left);
-        telemetry.addData("right", "%.2f", right);
+        //telemetry.addData("left",  "%.2f", left);
+        //telemetry.addData("right", "%.2f", right);
     }
 
     /*
