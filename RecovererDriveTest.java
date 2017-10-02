@@ -29,10 +29,24 @@
 
 package org.firstinspires.ftc.teamcode;
 
+import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.Range;
+import com.qualcomm.hardware.bosch.JustLoggingAccelerationIntegrator;
+
+
+import org.firstinspires.ftc.robotcore.external.Func;
+import org.firstinspires.ftc.robotcore.external.navigation.Acceleration;
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
+import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
+import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
+import org.firstinspires.ftc.robotcore.external.navigation.Position;
+import org.firstinspires.ftc.robotcore.external.navigation.Velocity;
+
+import java.util.Locale;
 
 import org.firstinspires.ftc.robotcontroller.external.samples.HardwarePushbot;
 
@@ -56,7 +70,15 @@ public class RecovererDriveTest extends OpMode{
 
     /* Declare OpMode members. */
     HardwareRecoverer robot       = new HardwareRecoverer(); // use the class created to define a Pushbot's hardware
-                                                         // could also use HardwarePushbotMatrix class.
+
+    BNO055IMU imu;
+
+    Orientation angles;
+    Acceleration gravity;
+
+
+
+    // could also use HardwarePushbotMatrix class.
     double          clawOffset  = 0.0 ;                  // Servo mid position
     final double    CLAW_SPEED  = 0.02 ;                 // sets rate to move servo
 
@@ -93,23 +115,45 @@ public class RecovererDriveTest extends OpMode{
      */
     @Override
     public void loop() {
-        double left;
-        double right;
+
+        BNO055IMU.Parameters parameters = new BNO055IMU.Parameters();
+        parameters.angleUnit = BNO055IMU.AngleUnit.DEGREES;
+        parameters.accelUnit = BNO055IMU.AccelUnit.METERS_PERSEC_PERSEC;
+        parameters.calibrationDataFile = "BNO055IMUCalibration.json"; // see the calibration sample opmode
+        parameters.loggingEnabled = true;
+        parameters.loggingTag = "IMU";
+        parameters.accelerationIntegrationAlgorithm = new JustLoggingAccelerationIntegrator();
+
+        imu = hardwareMap.get(BNO055IMU.class, "imu");
+        imu.initialize(parameters);
+
+        imu.startAccelerationIntegration(new Position(), new Velocity(), 1000);
+
+        double right_side;
+        double left_side;
+        double turn;
 
         // Run wheels in tank mode (note: The joystick goes negative when pushed forwards, so negate it)
-        left = -gamepad1.left_stick_y;
-        right = -gamepad1.right_stick_y;
+        right_side = -gamepad1.left_stick_y;
+        left_side = -gamepad1.right_stick_y;
+        turn = -gamepad1.right_stick_x;
 
-        robot.drive1.setPower(left);
-        robot.drive3.setPower(left);
-        robot.drive2.setPower(right);
-        robot.drive4.setPower(right);
+        robot.ldBack.setPower(left_side);
+        robot.ldFront.setPower(left_side);
+        robot.rdFront.setPower(right_side);
+        robot.rdBack.setPower(right_side);
+
+        if (1==0){
+            angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
+            gravity = imu.getGravity();
+        }
+
 
         // Use gamepad left & right Bumpers to open and close the claw
         //if (gamepad1.right_bumper)
-            //clawOffset += CLAW_SPEED;
+        //clawOffset += CLAW_SPEED;
         //else if (gamepad1.left_bumper)
-            //clawOffset -= CLAW_SPEED;
+        //clawOffset -= CLAW_SPEED;
 
         // Move both servos to new position.  Assume servos are mirror image of each other.
         //clawOffset = Range.clip(clawOffset, -0.5, 0.5);
@@ -128,13 +172,16 @@ public class RecovererDriveTest extends OpMode{
 
         // Send telemetry message to signify robot running;
         //telemetry.addData("claw",  "Offset = %.2f", clawOffset);
-        //telemetry.addData("left",  "%.2f", left);
-        //telemetry.addData("right", "%.2f", right);
-    }
+
 
     /*
      * Code to run ONCE after the driver hits STOP
      */
+
+    }
+
+
+
     @Override
     public void stop() {
     }
