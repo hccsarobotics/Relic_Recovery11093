@@ -35,7 +35,19 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
-import org.firstinspires.ftc.robotcontroller.external.samples.HardwarePushbot;
+import com.qualcomm.hardware.bosch.BNO055IMU;
+import org.firstinspires.ftc.robotcore.external.Func;
+import org.firstinspires.ftc.robotcore.external.navigation.Acceleration;
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
+import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
+import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
+import org.firstinspires.ftc.robotcore.external.navigation.Position;
+import org.firstinspires.ftc.robotcore.external.navigation.Velocity;
+
+import com.qualcomm.hardware.bosch.JustLoggingAccelerationIntegrator;
+
+import java.util.Locale;
 
 /**
  * This file illustrates the concept of driving a path based on encoder counts.
@@ -68,6 +80,20 @@ import org.firstinspires.ftc.robotcontroller.external.samples.HardwarePushbot;
 
 public class RecovererAuto extends LinearOpMode {
 
+
+    BNO055IMU imu;
+
+    Orientation angles;
+    Acceleration gravity;
+
+    String formatDegrees(double degrees){
+        return String.format(Locale.getDefault(), "%.1f", AngleUnit.DEGREES.normalize(degrees));
+    }
+
+    String formatAngle(AngleUnit angleUnit, double angle) {
+        return formatDegrees(AngleUnit.DEGREES.fromUnit(angleUnit, angle));
+    }
+
     /* Declare OpMode members. */
     HardwareRecoverer robot   = new HardwareRecoverer();   // Use a Pushbot's hardware
     private ElapsedTime     runtime = new ElapsedTime();
@@ -87,6 +113,20 @@ public class RecovererAuto extends LinearOpMode {
          * Initialize the drive system variables.
          * The init() method of the hardware class does all the work here
          */
+
+        BNO055IMU.Parameters parameters = new BNO055IMU.Parameters();
+        parameters.angleUnit = BNO055IMU.AngleUnit.DEGREES;
+        parameters.accelUnit = BNO055IMU.AccelUnit.METERS_PERSEC_PERSEC;
+        parameters.calibrationDataFile = "BNO055IMUCalibration.json"; // see the calibration sample opmode
+        parameters.loggingEnabled = true;
+        parameters.loggingTag = "IMU";
+        parameters.accelerationIntegrationAlgorithm = new JustLoggingAccelerationIntegrator();
+
+        imu = hardwareMap.get(BNO055IMU.class, "imu");
+        imu.initialize(parameters);
+
+        imu.startAccelerationIntegration(new Position(), new Velocity(), 1000);
+
         robot.init(hardwareMap);
 
         // Send telemetry message to signify robot waiting;
@@ -104,6 +144,14 @@ public class RecovererAuto extends LinearOpMode {
         robot.rdBack.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
         // Send telemetry message to indicate successful Encoder reset
+        angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
+        telemetry
+                .addData("heading", new Func<String>() {
+                    @Override public String value() {
+                        return formatAngle(angles.angleUnit, angles.firstAngle);
+                    }
+                });
+
         telemetry.addData("Path0",  "Starting at %7d :%7d",
                             robot.ldFront.getCurrentPosition(),
                             robot.ldFront.getCurrentPosition(),
@@ -198,7 +246,7 @@ public class RecovererAuto extends LinearOpMode {
             robot.rdFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
             robot.rdBack.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
-            //  sleep(250);   // optional pause after each move
+            sleep(250);   // optional pause after each move
         }
     }
 }
