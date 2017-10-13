@@ -48,6 +48,8 @@ import org.firstinspires.ftc.robotcore.external.navigation.Velocity;
 
 import java.util.Locale;
 
+import java.lang.Math;
+
 import org.firstinspires.ftc.robotcontroller.external.samples.HardwarePushbot;
 
 /**
@@ -76,6 +78,13 @@ public class RecovererDriveTest extends OpMode{
     Orientation angles;
     Acceleration gravity;
 
+    String formatDegrees(double degrees){
+        return String.format(Locale.getDefault(), "%.1f", AngleUnit.DEGREES.normalize(degrees));
+    }
+
+    String formatAngle(AngleUnit angleUnit, double angle) {
+        return formatDegrees(AngleUnit.DEGREES.fromUnit(angleUnit, angle));
+    }
 
 
     // could also use HardwarePushbotMatrix class.
@@ -101,21 +110,6 @@ public class RecovererDriveTest extends OpMode{
      */
     @Override
     public void init_loop() {
-    }
-
-    /*
-     * Code to run ONCE when the driver hits PLAY
-     */
-    @Override
-    public void start() {
-    }
-
-    /*
-     * Code to run REPEATEDLY after the driver hits PLAY but before they hit STOP
-     */
-    @Override
-    public void loop() {
-
         BNO055IMU.Parameters parameters = new BNO055IMU.Parameters();
         parameters.angleUnit = BNO055IMU.AngleUnit.DEGREES;
         parameters.accelUnit = BNO055IMU.AccelUnit.METERS_PERSEC_PERSEC;
@@ -126,52 +120,87 @@ public class RecovererDriveTest extends OpMode{
 
         imu = hardwareMap.get(BNO055IMU.class, "imu");
         imu.initialize(parameters);
+    }
 
+    /*
+     * Code to run ONCE when the driver hits PLAY
+     */
+    @Override
+    public void start() {
         imu.startAccelerationIntegration(new Position(), new Velocity(), 1000);
+    }
+
+    /*
+     * Code to run REPEATEDLY after the driver hits PLAY but before they hit STOP
+     */
+    @Override
+    public void loop() {
+
 
         double right_side;
         double left_side;
         double turn;
 
         // Run wheels in tank mode (note: The joystick goes negative when pushed forwards, so negate it)
-        right_side = -gamepad1.left_stick_y;
-        left_side = -gamepad1.right_stick_y;
-        turn = -gamepad1.right_stick_x;
+        left_side = -gamepad1.left_stick_y;
+        right_side = gamepad1.right_stick_y;
+        turn = gamepad1.right_stick_x;
 
-        robot.ldBack.setPower(left_side);
-        robot.ldFront.setPower(left_side);
-        robot.rdFront.setPower(right_side);
-        robot.rdBack.setPower(right_side);
 
-        if (1==0){
+
+
+        if (Math.abs(turn) > 0.15)
+        {
+            robot.ldBack.setPower(-turn);
+            robot.ldFront.setPower(turn);
+            robot.rdBack.setPower(-turn);
+            robot.rdFront.setPower(turn);
+        }
+        else
+        {
+            robot.ldBack.setPower(left_side);
+            robot.ldFront.setPower(left_side);
+            robot.rdFront.setPower(right_side);
+            robot.rdBack.setPower(right_side);
+        }
+
+        if (gamepad1.b)
+        {
             angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
-            gravity = imu.getGravity();
+            telemetry
+                    .addData("heading", new Func<String>() {
+                        @Override public String value() {
+                            return formatAngle(angles.angleUnit, angles.firstAngle);
+                        }
+                    });
         }
 
 
+
         // Use gamepad left & right Bumpers to open and close the claw
-        //if (gamepad1.right_bumper)
-        //clawOffset += CLAW_SPEED;
-        //else if (gamepad1.left_bumper)
-        //clawOffset -= CLAW_SPEED;
+        if (gamepad1.right_bumper)
+        clawOffset += CLAW_SPEED;
+        else if (gamepad1.left_bumper)
+        clawOffset -= CLAW_SPEED;
 
         // Move both servos to new position.  Assume servos are mirror image of each other.
-        //clawOffset = Range.clip(clawOffset, -0.5, 0.5);
-        //robot.leftClaw.setPosition(robot.MID_SERVO + clawOffset);
-        //robot.rightClaw.setPosition(robot.MID_SERVO - clawOffset);
+        clawOffset = Range.clip(clawOffset, -0.5, 0.5);
+        robot.leftClaw.setPosition(robot.MID_SERVO + clawOffset);
+        robot.rightClaw.setPosition(robot.MID_SERVO - clawOffset);
 
         // Use gamepad buttons to move the arm up (Y) and down (A)
-        /*
-        if (gamepad1.y)
-            robot.leftArm.setPower(robot.ARM_UP_POWER);
-        else if (gamepad1.a)
-            robot.leftArm.setPower(robot.ARM_DOWN_POWER);
+
+        if (gamepad1.a)
+            robot.arm.setPower(robot.ARM_UP_POWER);
+        else if (gamepad1.y)
+            robot.arm.setPower(robot.ARM_DOWN_POWER);
         else
-            robot.leftArm.setPower(0.0);
-            */
+            robot.arm.setPower(0.0);
+
 
         // Send telemetry message to signify robot running;
         //telemetry.addData("claw",  "Offset = %.2f", clawOffset);
+
 
 
     /*
