@@ -33,6 +33,7 @@ import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.util.Range;
 import com.qualcomm.hardware.bosch.JustLoggingAccelerationIntegrator;
 
@@ -151,14 +152,14 @@ public class RecovererDriveTest extends OpMode{
         turn = gamepad1.right_stick_x;
         slow = gamepad1.right_bumper;
 
-        slowDub = (slow) ? 8:1;
+        slowDub = (slow) ? 6:1;
 
         if (Math.abs(turn) > 0.25)
         {
-            robot.ldBack.setPower(-turn);
-            robot.ldFront.setPower(turn);
-            robot.rdBack.setPower(-turn);
-            robot.rdFront.setPower(turn);
+            robot.ldBack.setPower(-turn/slowDub);
+            robot.ldFront.setPower(turn/slowDub);
+            robot.rdBack.setPower(-turn/slowDub);
+            robot.rdFront.setPower(turn/slowDub);
         }
         else
         {
@@ -185,7 +186,7 @@ public class RecovererDriveTest extends OpMode{
         if (gamepad2.right_bumper) {
             if (armStateOpen) {
                 armStateOpen = Boolean.FALSE;
-                clawOffset += CLAW_SPEED;
+                clawOffset += .7;
                 try {
                     Thread.sleep(500);
                 } catch (InterruptedException e) {
@@ -195,7 +196,7 @@ public class RecovererDriveTest extends OpMode{
 
             }   else {
                 armStateOpen = Boolean.TRUE;
-                clawOffset -= CLAW_SPEED;
+                clawOffset -= 1;
                 try {
                     Thread.sleep(500);
                 } catch (InterruptedException e) {

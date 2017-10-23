@@ -107,6 +107,7 @@ public class RecovererAuto extends LinearOpMode {
     static final double     TURN_SPEED              = 0.5;
 
     double heading;
+    double headingAdjuster;
 
     @Override
     public void runOpMode() {
@@ -147,8 +148,6 @@ public class RecovererAuto extends LinearOpMode {
 
         // Send telemetry message to indicate successful Encoder reset
 
-        //double headingAdjuster = Double.parseDouble(formatAngle(angles.angleUnit, angles.firstAngle));
-
         telemetry.addData("Path0",  "Starting at %7d :%7d",
                             robot.ldFront.getCurrentPosition(),
                             robot.ldFront.getCurrentPosition(),
@@ -159,12 +158,16 @@ public class RecovererAuto extends LinearOpMode {
         // Wait for the game to start (driver presses PLAY)
         waitForStart();
 
+        //angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
+        //headingAdjuster = Double.parseDouble(formatAngle(angles.angleUnit, angles.firstAngle));
+
         // Step through each leg of the path,
         // Note: Reverse movement is obtained by setting a negative distance (not speed)
         encoderDrive(DRIVE_SPEED,  48,  48, 2.0);  // S1: Forward 47 Inches with 5 Sec timeout
-        bopIt(90);
-        encoderDrive(DRIVE_SPEED, -24, -24, 2.0);  // S3: Reverse 24 Inches with 4 Sec timeout
+        bopIt(70);
+        encoderDrive(DRIVE_SPEED, 24, 24, 2.0);  // S3: Reverse 24 Inches with 4 Sec timeout
 
+        /*
         robot.leftClaw.setPosition(1.0);            // S4: Stop and close the claw.
         robot.rightClaw.setPosition(0.0);
         sleep(1000);     // pause for servos to move
@@ -173,6 +176,7 @@ public class RecovererAuto extends LinearOpMode {
         robot.arm.setPower(robot.ARM_DOWN_POWER);
         sleep(500);
         robot.arm.setPower(0);
+        */
 
         telemetry.addData("Path", "Complete");
         telemetry.update();
@@ -263,9 +267,25 @@ public class RecovererAuto extends LinearOpMode {
                     }
                 });
         heading = Double.parseDouble(formatAngle(angles.angleUnit, angles.firstAngle));
+        //newHeading = (newHeading - headingAdjuster) % 360;
+
+        if (newHeading < 0)
+        {
+            robot.ldFront.setPower(.5);
+            robot.ldBack.setPower(.5);
+            robot.rdFront.setPower(.5);
+            robot.rdBack.setPower(.5);
+        }
+        else if (newHeading > 0)
+        {
+            robot.ldFront.setPower(-1);
+            robot.ldBack.setPower(-1);
+            robot.rdFront.setPower(-1);
+            robot.rdBack.setPower(-1);
+        }
+
         while (heading < newHeading - 5 || heading > newHeading + 5)
         {
-            encoderDrive(TURN_SPEED, -1, 1, .1);
             angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
             heading = Double.parseDouble(formatAngle(angles.angleUnit, angles.firstAngle));
             telemetry
@@ -276,5 +296,10 @@ public class RecovererAuto extends LinearOpMode {
                     });
 
         }
+        robot.ldFront.setPower(0);
+        robot.ldBack.setPower(0);
+        robot.rdFront.setPower(0);
+        robot.rdBack.setPower(0);
+
     }
 }
