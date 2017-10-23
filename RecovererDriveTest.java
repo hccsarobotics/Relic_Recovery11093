@@ -90,6 +90,7 @@ public class RecovererDriveTest extends OpMode{
     // could also use HardwarePushbotMatrix class.
     double          clawOffset  = 0.0 ;                  // Servo mid position
     final double    CLAW_SPEED  = 0.02 ;                 // sets rate to move servo
+    boolean armStateOpen = true;
 
     /*
      * Code to run ONCE when the driver hits INIT
@@ -103,6 +104,7 @@ public class RecovererDriveTest extends OpMode{
 
         // Send telemetry message to signify robot waiting;
         telemetry.addData("Say", "Hello Driver");    //
+
     }
 
     /*
@@ -140,16 +142,18 @@ public class RecovererDriveTest extends OpMode{
         double right_side;
         double left_side;
         double turn;
+        boolean slow;
+        double slowDub;
 
         // Run wheels in tank mode (note: The joystick goes negative when pushed forwards, so negate it)
         left_side = -gamepad1.left_stick_y;
         right_side = gamepad1.right_stick_y;
         turn = gamepad1.right_stick_x;
+        slow = gamepad1.right_bumper;
 
+        slowDub = (slow) ? 8:1;
 
-
-
-        if (Math.abs(turn) > 0.15)
+        if (Math.abs(turn) > 0.25)
         {
             robot.ldBack.setPower(-turn);
             robot.ldFront.setPower(turn);
@@ -158,10 +162,10 @@ public class RecovererDriveTest extends OpMode{
         }
         else
         {
-            robot.ldBack.setPower(left_side);
-            robot.ldFront.setPower(left_side);
-            robot.rdFront.setPower(right_side);
-            robot.rdBack.setPower(right_side);
+            robot.ldBack.setPower(left_side/slowDub);
+            robot.ldFront.setPower(left_side/slowDub);
+            robot.rdFront.setPower(right_side/slowDub);
+            robot.rdBack.setPower(right_side/slowDub);
         }
 
         if (gamepad1.b)
@@ -178,10 +182,30 @@ public class RecovererDriveTest extends OpMode{
 
 
         // Use gamepad left & right Bumpers to open and close the claw
-        if (gamepad1.right_bumper)
-        clawOffset += CLAW_SPEED;
-        else if (gamepad1.left_bumper)
-        clawOffset -= CLAW_SPEED;
+        if (gamepad2.right_bumper) {
+            if (armStateOpen) {
+                armStateOpen = Boolean.FALSE;
+                clawOffset += CLAW_SPEED;
+                try {
+                    Thread.sleep(500);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
+
+
+            }   else {
+                armStateOpen = Boolean.TRUE;
+                clawOffset -= CLAW_SPEED;
+                try {
+                    Thread.sleep(500);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
+
+
+            }
+        }
+
 
         // Move both servos to new position.  Assume servos are mirror image of each other.
         clawOffset = Range.clip(clawOffset, -0.5, 0.5);
@@ -190,9 +214,9 @@ public class RecovererDriveTest extends OpMode{
 
         // Use gamepad buttons to move the arm up (Y) and down (A)
 
-        if (gamepad1.a)
+        if (gamepad2.a)
             robot.arm.setPower(robot.ARM_UP_POWER);
-        else if (gamepad1.y)
+        else if (gamepad2.y)
             robot.arm.setPower(robot.ARM_DOWN_POWER);
         else
             robot.arm.setPower(0.0);
@@ -200,6 +224,7 @@ public class RecovererDriveTest extends OpMode{
 
         // Send telemetry message to signify robot running;
         //telemetry.addData("claw",  "Offset = %.2f", clawOffset);
+        telemetry.addData("arm state", "%s", armStateOpen);
 
 
 

@@ -106,6 +106,8 @@ public class RecovererAuto extends LinearOpMode {
     static final double     DRIVE_SPEED             = 0.6;
     static final double     TURN_SPEED              = 0.5;
 
+    double heading;
+
     @Override
     public void runOpMode() {
 
@@ -144,13 +146,8 @@ public class RecovererAuto extends LinearOpMode {
         robot.rdBack.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
         // Send telemetry message to indicate successful Encoder reset
-        angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
-        telemetry
-                .addData("heading", new Func<String>() {
-                    @Override public String value() {
-                        return formatAngle(angles.angleUnit, angles.firstAngle);
-                    }
-                });
+
+        //double headingAdjuster = Double.parseDouble(formatAngle(angles.angleUnit, angles.firstAngle));
 
         telemetry.addData("Path0",  "Starting at %7d :%7d",
                             robot.ldFront.getCurrentPosition(),
@@ -164,13 +161,18 @@ public class RecovererAuto extends LinearOpMode {
 
         // Step through each leg of the path,
         // Note: Reverse movement is obtained by setting a negative distance (not speed)
-        encoderDrive(DRIVE_SPEED,  48,  48, 5.0);  // S1: Forward 47 Inches with 5 Sec timeout
-        encoderDrive(TURN_SPEED,   12, -12, 4.0);  // S2: Turn Right 12 Inches with 4 Sec timeout
-        encoderDrive(DRIVE_SPEED, -24, -24, 4.0);  // S3: Reverse 24 Inches with 4 Sec timeout
+        encoderDrive(DRIVE_SPEED,  48,  48, 2.0);  // S1: Forward 47 Inches with 5 Sec timeout
+        bopIt(90);
+        encoderDrive(DRIVE_SPEED, -24, -24, 2.0);  // S3: Reverse 24 Inches with 4 Sec timeout
 
         robot.leftClaw.setPosition(1.0);            // S4: Stop and close the claw.
         robot.rightClaw.setPosition(0.0);
         sleep(1000);     // pause for servos to move
+        robot.arm.setPower(robot.ARM_UP_POWER);
+        sleep(500);
+        robot.arm.setPower(robot.ARM_DOWN_POWER);
+        sleep(500);
+        robot.arm.setPower(0);
 
         telemetry.addData("Path", "Complete");
         telemetry.update();
@@ -189,6 +191,8 @@ public class RecovererAuto extends LinearOpMode {
                              double timeoutS) {
         int newLeftTarget;
         int newRightTarget;
+
+        rightInches = rightInches*-1;
 
         // Ensure that the opmode is still active
         if (opModeIsActive()) {
@@ -247,6 +251,30 @@ public class RecovererAuto extends LinearOpMode {
             robot.rdBack.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
             sleep(250);   // optional pause after each move
+        }
+    }
+
+    public void bopIt(double newHeading){
+        angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
+        telemetry
+                .addData("heading", new Func<String>() {
+                    @Override public String value() {
+                        return formatAngle(angles.angleUnit, angles.firstAngle);
+                    }
+                });
+        heading = Double.parseDouble(formatAngle(angles.angleUnit, angles.firstAngle));
+        while (heading < newHeading - 5 || heading > newHeading + 5)
+        {
+            encoderDrive(TURN_SPEED, -1, 1, .1);
+            angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
+            heading = Double.parseDouble(formatAngle(angles.angleUnit, angles.firstAngle));
+            telemetry
+                    .addData("heading", new Func<String>() {
+                        @Override public String value() {
+                            return formatAngle(angles.angleUnit, angles.firstAngle);
+                        }
+                    });
+
         }
     }
 }
