@@ -90,6 +90,7 @@ public class RecovererDriveTest extends OpMode{
 
     // could also use HardwarePushbotMatrix class.
     double          clawOffset  = 0.0 ;                  // Servo mid position
+    int           armTarget = 0;
     final double    CLAW_SPEED  = 0.02 ;                 // sets rate to move servo
     boolean armStateOpen = true;
 
@@ -186,7 +187,7 @@ public class RecovererDriveTest extends OpMode{
         if (gamepad2.right_bumper) {
             if (armStateOpen) {
                 armStateOpen = Boolean.FALSE;
-                clawOffset += .7;
+                clawOffset += .5;
                 try {
                     Thread.sleep(500);
                 } catch (InterruptedException e) {
@@ -216,16 +217,48 @@ public class RecovererDriveTest extends OpMode{
         // Use gamepad buttons to move the arm up (Y) and down (A)
 
         if (gamepad2.a)
-            robot.arm.setPower(robot.ARM_UP_POWER);
+        {
+            armTarget = armTarget + 50;
+        }
         else if (gamepad2.y)
-            robot.arm.setPower(robot.ARM_DOWN_POWER);
+        {
+            armTarget = armTarget - 50;
+        }
+
+        if (Math.abs(robot.arm.getCurrentPosition()) > Math.abs(armTarget) + 250 || Math.abs(robot.arm.getCurrentPosition()) < Math.abs(armTarget) - 250)
+        {
+            robot.arm.setTargetPosition(Math.abs(armTarget));
+            if (robot.arm.getCurrentPosition() > armTarget)
+            {
+                robot.arm.setPower(-.25);
+            }
+            else
+            {
+                robot.arm.setPower(.25);
+            }
+        }
         else
-            robot.arm.setPower(0.0);
+        {
+            robot.arm.setPower(0);
+        }
+
+        if (gamepad2.dpad_down)
+        {
+            robot.jewelArm.setPosition(.5);
+        }
+        else
+        {
+            robot.jewelArm.setPosition(0);
+        }
+
+
 
 
         // Send telemetry message to signify robot running;
         //telemetry.addData("claw",  "Offset = %.2f", clawOffset);
         telemetry.addData("arm state", "%s", armStateOpen);
+        telemetry.addData("Target Position", armTarget);
+        telemetry.addData("Current Position", robot.arm.getCurrentPosition());
 
 
 

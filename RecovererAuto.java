@@ -108,6 +108,7 @@ public class RecovererAuto extends LinearOpMode {
 
     double heading;
     double headingAdjuster;
+    double directionTo;
 
     @Override
     public void runOpMode() {
@@ -158,14 +159,15 @@ public class RecovererAuto extends LinearOpMode {
         // Wait for the game to start (driver presses PLAY)
         waitForStart();
 
-        //angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
-        //headingAdjuster = Double.parseDouble(formatAngle(angles.angleUnit, angles.firstAngle));
+        angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
+        headingAdjuster = Double.parseDouble(formatAngle(angles.angleUnit, angles.firstAngle));
 
         // Step through each leg of the path,
         // Note: Reverse movement is obtained by setting a negative distance (not speed)
         encoderDrive(DRIVE_SPEED,  48,  48, 2.0);  // S1: Forward 47 Inches with 5 Sec timeout
-        bopIt(70);
-        encoderDrive(DRIVE_SPEED, 24, 24, 2.0);  // S3: Reverse 24 Inches with 4 Sec timeout
+        twistIt(90);
+        encoderDrive(DRIVE_SPEED, 12, 12, 2.0);  // S3: Reverse 24 Inches with 4 Sec timeout
+        twistIt(-90);
 
         /*
         robot.leftClaw.setPosition(1.0);            // S4: Stop and close the claw.
@@ -258,7 +260,7 @@ public class RecovererAuto extends LinearOpMode {
         }
     }
 
-    public void bopIt(double newHeading){
+    public void twistIt(double newHeading){
         angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
         telemetry
                 .addData("heading", new Func<String>() {
@@ -267,24 +269,35 @@ public class RecovererAuto extends LinearOpMode {
                     }
                 });
         heading = Double.parseDouble(formatAngle(angles.angleUnit, angles.firstAngle));
+
+        directionTo = newHeading - headingAdjuster;
+
+        if (directionTo < 0)
+        {
+            directionTo = 360 - directionTo;
+        }
+
+
         //newHeading = (newHeading - headingAdjuster) % 360;
 
-        if (newHeading < 0)
+        if (directionTo > 181)
         {
             robot.ldFront.setPower(.5);
             robot.ldBack.setPower(.5);
             robot.rdFront.setPower(.5);
             robot.rdBack.setPower(.5);
         }
-        else if (newHeading > 0)
+        else if (directionTo < 180)
         {
-            robot.ldFront.setPower(-1);
-            robot.ldBack.setPower(-1);
-            robot.rdFront.setPower(-1);
-            robot.rdBack.setPower(-1);
+            robot.ldFront.setPower(-.5);
+            robot.ldBack.setPower(-.5);
+            robot.rdFront.setPower(-.5);
+            robot.rdBack.setPower(-.5);
         }
 
-        while (heading < newHeading - 5 || heading > newHeading + 5)
+        telemetry.addData("DirectionTo", directionTo);
+
+        while (heading - headingAdjuster < directionTo - 2.5 || heading - headingAdjuster > directionTo + 2.5)
         {
             angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
             heading = Double.parseDouble(formatAngle(angles.angleUnit, angles.firstAngle));

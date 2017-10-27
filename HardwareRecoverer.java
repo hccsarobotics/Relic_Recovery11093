@@ -62,6 +62,7 @@ public class HardwareRecoverer
     public DcMotor  arm      = null;
     public Servo    leftClaw    = null;
     public Servo    rightClaw   = null;
+    public Servo    jewelArm    = null;
     //public BNO055IMU NineDOF = null;
 
 
@@ -117,11 +118,15 @@ public class HardwareRecoverer
 
         arm.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
+        arm.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
         // Define and initialize ALL installed servos.
         leftClaw  = hwMap.get(Servo.class, "left_hand");
         rightClaw = hwMap.get(Servo.class, "right_hand");
+        jewelArm = hwMap.get(Servo.class, "jewel_Arm");
         leftClaw.setPosition(MID_SERVO);
         rightClaw.setPosition(MID_SERVO);
+        jewelArm.setPosition(0);
 
     }
  }
