@@ -35,7 +35,7 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
-
+import com.qualcomm.robotcore.hardware.ColorSensor;
 /**
  * This is NOT an opmode.
  *
@@ -64,6 +64,26 @@ public class HardwareRecoverer
     public Servo    rightClaw   = null;
     public Servo    jewelArm    = null;
     //public BNO055IMU NineDOF = null;
+
+    public ColorSensor boardColorSensor = null;
+    private static Boolean onBlueBoard = Boolean.FALSE;
+
+    public ColorSensor ballColorSensor = null;
+    private static Boolean ballIsBlue = Boolean.FALSE;
+
+    public void setBoardBlue(Boolean color) {
+        onBlueBoard = color;
+    }
+
+    public Boolean isBoardBlue() {
+        return onBlueBoard;
+    }
+
+    public Boolean isBallBlue() { return ballIsBlue; }
+
+    public void setBallBlue(Boolean color) {
+        ballIsBlue = color;
+    }
 
 
 
@@ -127,6 +147,11 @@ public class HardwareRecoverer
         leftClaw.setPosition(MID_SERVO);
         rightClaw.setPosition(MID_SERVO);
         jewelArm.setPosition(0);
+
+        boardColorSensor = hwMap.get(ColorSensor.class, "board_cs");
+        ballColorSensor = hwMap.get(ColorSensor.class, "jewel_cs");
+
+
 
     }
  }

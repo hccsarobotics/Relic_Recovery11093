@@ -98,17 +98,19 @@ public class RecovererAuto extends LinearOpMode {
     HardwareRecoverer robot   = new HardwareRecoverer();   // Use a Pushbot's hardware
     private ElapsedTime     runtime = new ElapsedTime();
 
-    static final double     COUNTS_PER_MOTOR_REV    = 1440 ;    // eg: TETRIX Motor Encoder
-    static final double     DRIVE_GEAR_REDUCTION    = 2.0 ;     // This is < 1.0 if geared UP
+    static final double     COUNTS_PER_MOTOR_REV    = 560 ;    // eg: TETRIX Motor Encoder
+    static final double     DRIVE_GEAR_REDUCTION    = 1.0 ;     // This is < 1.0 if geared UP
     static final double     WHEEL_DIAMETER_INCHES   = 4.0 ;     // For figuring circumference
     static final double     COUNTS_PER_INCH         = (COUNTS_PER_MOTOR_REV * DRIVE_GEAR_REDUCTION) /
                                                       (WHEEL_DIAMETER_INCHES * 3.1415);
-    static final double     DRIVE_SPEED             = 0.6;
-    static final double     TURN_SPEED              = 0.5;
+    static final double     DRIVE_SPEED             = 0.3;
+    static final double     TURN_SPEED              = 0.3;
 
     double heading;
     double headingAdjuster;
     double directionTo;
+
+    static final double     BLUE_THRESHOLD          = 14;
 
     @Override
     public void runOpMode() {
@@ -136,6 +138,39 @@ public class RecovererAuto extends LinearOpMode {
         // Send telemetry message to signify robot waiting;
         telemetry.addData("Status", "Resetting Encoders");    //
         telemetry.update();
+
+        telemetry.addData("Board Sensor Val ", robot.boardColorSensor.blue());
+        if (robot.boardColorSensor.blue() >= BLUE_THRESHOLD) {
+            robot.setBoardBlue(Boolean.TRUE);
+            telemetry.addData("  ", "BLUE TEAM");
+        } else {
+
+            robot.setBoardBlue(Boolean.FALSE);
+            telemetry.addData("   ", "RED TEAM");
+
+        }
+
+
+        /****************************************************************
+         * TODO:  Add code to lower jewel arm, turn robot correct direction and
+         *        then raise the jewel arm prior to placing glyph.  The code below
+         *        can be used to determine which jewel to knock off.
+         */
+
+        if (robot.ballColorSensor.blue() >= BLUE_THRESHOLD) {
+            robot.setBallBlue(Boolean.TRUE);
+
+        } else {
+            robot.setBallBlue(Boolean.FALSE);
+        }
+
+        if (robot.isBoardBlue()) {
+            // add code here to turn toward red ball
+            telemetry.addData("   ", "HIT RED JEWEL");
+        } else {
+            // add code here to turn toward blue ball
+            telemetry.addData("   ", "HIT BLUE JEWEL");
+        }
 
         robot.ldFront.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         robot.rdFront.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -282,17 +317,17 @@ public class RecovererAuto extends LinearOpMode {
 
         if (directionTo > 181)
         {
-            robot.ldFront.setPower(.5);
-            robot.ldBack.setPower(.5);
-            robot.rdFront.setPower(.5);
-            robot.rdBack.setPower(.5);
+            robot.ldFront.setPower(TURN_SPEED);
+            robot.ldBack.setPower(TURN_SPEED);
+            robot.rdFront.setPower(TURN_SPEED);
+            robot.rdBack.setPower(TURN_SPEED);
         }
         else if (directionTo < 180)
         {
-            robot.ldFront.setPower(-.5);
-            robot.ldBack.setPower(-.5);
-            robot.rdFront.setPower(-.5);
-            robot.rdBack.setPower(-.5);
+            robot.ldFront.setPower(-TURN_SPEED);
+            robot.ldBack.setPower(-TURN_SPEED);
+            robot.rdFront.setPower(-TURN_SPEED);
+            robot.rdBack.setPower(-TURN_SPEED);
         }
 
         telemetry.addData("DirectionTo", directionTo);
