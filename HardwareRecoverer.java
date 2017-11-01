@@ -140,13 +140,19 @@ public class HardwareRecoverer
 
         arm.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
+        ldFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        rdFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        ldBack.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        rdBack.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        arm.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
         // Define and initialize ALL installed servos.
         leftClaw  = hwMap.get(Servo.class, "left_hand");
         rightClaw = hwMap.get(Servo.class, "right_hand");
         jewelArm = hwMap.get(Servo.class, "jewel_Arm");
         leftClaw.setPosition(MID_SERVO);
         rightClaw.setPosition(MID_SERVO);
-        jewelArm.setPosition(0);
+        jewelArm.setPosition(1);
 
         boardColorSensor = hwMap.get(ColorSensor.class, "board_cs");
         ballColorSensor = hwMap.get(ColorSensor.class, "jewel_cs");

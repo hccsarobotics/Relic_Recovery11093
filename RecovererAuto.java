@@ -194,15 +194,15 @@ public class RecovererAuto extends LinearOpMode {
         // Wait for the game to start (driver presses PLAY)
         waitForStart();
 
-        angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
-        headingAdjuster = Double.parseDouble(formatAngle(angles.angleUnit, angles.firstAngle));
+        //angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
+        //headingAdjuster = Double.parseDouble(formatAngle(angles.angleUnit, angles.firstAngle));
 
         // Step through each leg of the path,
         // Note: Reverse movement is obtained by setting a negative distance (not speed)
         encoderDrive(DRIVE_SPEED,  48,  48, 2.0);  // S1: Forward 47 Inches with 5 Sec timeout
-        twistIt(90);
-        encoderDrive(DRIVE_SPEED, 12, 12, 2.0);  // S3: Reverse 24 Inches with 4 Sec timeout
         twistIt(-90);
+        encoderDrive(DRIVE_SPEED, 12, 12, 2.0);  // S3: Reverse 24 Inches with 4 Sec timeout
+        twistIt(0);
 
         /*
         robot.leftClaw.setPosition(1.0);            // S4: Stop and close the claw.
@@ -305,24 +305,25 @@ public class RecovererAuto extends LinearOpMode {
                 });
         heading = Double.parseDouble(formatAngle(angles.angleUnit, angles.firstAngle));
 
-        directionTo = newHeading - headingAdjuster;
 
+        /*
         if (directionTo < 0)
         {
-            directionTo = 360 - directionTo;
+            directionTo = 360 + directionTo;
         }
+        */
 
 
         //newHeading = (newHeading - headingAdjuster) % 360;
 
-        if (directionTo > 181)
+        if (newHeading < 1)
         {
             robot.ldFront.setPower(TURN_SPEED);
             robot.ldBack.setPower(TURN_SPEED);
             robot.rdFront.setPower(TURN_SPEED);
             robot.rdBack.setPower(TURN_SPEED);
         }
-        else if (directionTo < 180)
+        else if (newHeading > 0)
         {
             robot.ldFront.setPower(-TURN_SPEED);
             robot.ldBack.setPower(-TURN_SPEED);
@@ -332,17 +333,18 @@ public class RecovererAuto extends LinearOpMode {
 
         telemetry.addData("DirectionTo", directionTo);
 
-        while (heading - headingAdjuster < directionTo - 2.5 || heading - headingAdjuster > directionTo + 2.5)
+        while (heading > newHeading + 2.5 || heading < newHeading - 2.5)
         {
             angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
             heading = Double.parseDouble(formatAngle(angles.angleUnit, angles.firstAngle));
+            /*
             telemetry
                     .addData("heading", new Func<String>() {
                         @Override public String value() {
                             return formatAngle(angles.angleUnit, angles.firstAngle);
                         }
                     });
-
+                    */
         }
         robot.ldFront.setPower(0);
         robot.ldBack.setPower(0);

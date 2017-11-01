@@ -93,6 +93,7 @@ public class RecovererDriveTest extends OpMode{
     int           armTarget = 0;
     final double    CLAW_SPEED  = 0.02 ;                 // sets rate to move servo
     boolean armStateOpen = true;
+    boolean hasExecuted = true;
 
     /*
      * Code to run ONCE when the driver hits INIT
@@ -153,7 +154,7 @@ public class RecovererDriveTest extends OpMode{
         turn = gamepad1.right_stick_x;
         slow = gamepad1.right_bumper;
 
-        slowDub = (slow) ? 6:1.5;
+        slowDub = (slow) ? 6:1.75;
 
         if (Math.abs(turn) > 0.25)
         {
@@ -184,55 +185,47 @@ public class RecovererDriveTest extends OpMode{
 
 
         // Use gamepad left & right Bumpers to open and close the claw
-        if (gamepad2.right_bumper) {
+        if (gamepad2.right_bumper && hasExecuted) {
             if (armStateOpen) {
                 armStateOpen = Boolean.FALSE;
                 clawOffset += .5;
-                try {
-                    Thread.sleep(500);
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                }
-
 
             }   else {
                 armStateOpen = Boolean.TRUE;
                 clawOffset -= 1;
-                try {
-                    Thread.sleep(500);
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                }
-
-
             }
+            hasExecuted = false;
         }
 
 
         // Move both servos to new position.  Assume servos are mirror image of each other.
-        clawOffset = Range.clip(clawOffset, -0.5, 0.5);
-        robot.leftClaw.setPosition(robot.MID_SERVO + clawOffset);
-        robot.rightClaw.setPosition(robot.MID_SERVO - clawOffset);
+        if (hasExecuted == false && gamepad2.right_bumper == false){
+            clawOffset = Range.clip(clawOffset, -0.5, 0.5);
+            robot.leftClaw.setPosition(robot.MID_SERVO + clawOffset);
+            robot.rightClaw.setPosition(robot.MID_SERVO - clawOffset);
+            hasExecuted = true;
+        }
+
 
         // Use gamepad buttons to move the arm up (Y) and down (A)
 
-        if (gamepad2.a)
+        if (gamepad2.y)
         {
-            armTarget = armTarget + 50;
+            armTarget = armTarget + 40;
         }
-        else if (gamepad2.y)
+        else if (gamepad2.a)
         {
-            armTarget = armTarget - 50;
+            armTarget = armTarget - 40;
         }
 
-        if (Math.abs(robot.arm.getCurrentPosition()) > Math.abs(armTarget) + 250 || Math.abs(robot.arm.getCurrentPosition()) < Math.abs(armTarget) - 250)
+        if (Math.abs(robot.arm.getCurrentPosition()) > Math.abs(armTarget) + 100 || Math.abs(robot.arm.getCurrentPosition()) < Math.abs(armTarget) - 100)
         {
             robot.arm.setTargetPosition(Math.abs(armTarget));
-            if (Math.abs(robot.arm.getCurrentPosition()) > Math.abs(armTarget))
+            if (Math.abs(robot.arm.getCurrentPosition()) > Math.abs(armTarget) && armTarget > 0)
             {
                 robot.arm.setPower(-.25);
             }
-            else if (Math.abs(robot.arm.getCurrentPosition()) < Math.abs(armTarget))
+            else if (Math.abs(robot.arm.getCurrentPosition()) < Math.abs(armTarget) && armTarget < 2020)
             {
                 robot.arm.setPower(.25);
             }
@@ -248,7 +241,7 @@ public class RecovererDriveTest extends OpMode{
         }
         else
         {
-            robot.jewelArm.setPosition(0);
+            robot.jewelArm.setPosition(1);
         }
 
 
