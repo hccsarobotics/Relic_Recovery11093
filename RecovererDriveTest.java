@@ -154,7 +154,9 @@ public class RecovererDriveTest extends OpMode{
         turn = gamepad1.right_stick_x;
         slow = gamepad1.right_bumper;
 
-        slowDub = (slow) ? 6:1.75;
+        slowDub = (slow) ? 6:2;
+
+        slowDub = slowDub - gamepad1.right_trigger/2;
 
         if (Math.abs(turn) > 0.25)
         {
@@ -211,13 +213,17 @@ public class RecovererDriveTest extends OpMode{
 
         if (gamepad2.y)
         {
-            armTarget = armTarget + 40;
+            robot.arm.setPower(-.25);
         }
         else if (gamepad2.a)
         {
-            armTarget = armTarget - 40;
+            robot.arm.setPower(.25);
         }
-
+        else
+        {
+            robot.arm.setPower(0);
+        }
+/*
         if (Math.abs(robot.arm.getCurrentPosition()) > Math.abs(armTarget) + 100 || Math.abs(robot.arm.getCurrentPosition()) < Math.abs(armTarget) - 100)
         {
             robot.arm.setTargetPosition(Math.abs(armTarget));
@@ -234,6 +240,7 @@ public class RecovererDriveTest extends OpMode{
         {
             robot.arm.setPower(0);
         }
+        */
 
         if (gamepad2.dpad_down)
         {

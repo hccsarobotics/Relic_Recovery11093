@@ -110,7 +110,7 @@ public class RecovererAuto extends LinearOpMode {
     double headingAdjuster;
     double directionTo;
 
-    static final double     BLUE_THRESHOLD          = 14;
+    static final double     BLUE_THRESHOLD          =  18;
 
     @Override
     public void runOpMode() {
@@ -156,20 +156,13 @@ public class RecovererAuto extends LinearOpMode {
          *        then raise the jewel arm prior to placing glyph.  The code below
          *        can be used to determine which jewel to knock off.
          */
+        robot.jewelArm.setPosition(.5);
 
         if (robot.ballColorSensor.blue() >= BLUE_THRESHOLD) {
             robot.setBallBlue(Boolean.TRUE);
 
         } else {
             robot.setBallBlue(Boolean.FALSE);
-        }
-
-        if (robot.isBoardBlue()) {
-            // add code here to turn toward red ball
-            telemetry.addData("   ", "HIT RED JEWEL");
-        } else {
-            // add code here to turn toward blue ball
-            telemetry.addData("   ", "HIT BLUE JEWEL");
         }
 
         robot.ldFront.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -197,12 +190,30 @@ public class RecovererAuto extends LinearOpMode {
         //angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
         //headingAdjuster = Double.parseDouble(formatAngle(angles.angleUnit, angles.firstAngle));
 
+
+        if (robot.isBoardBlue()^robot.isBallBlue()) {
+            encoderDrive(DRIVE_SPEED, -3 , -3, 2.0);
+        } else {
+            encoderDrive(DRIVE_SPEED, 3 , 3, 2.0);
+            telemetry.addData("   ", "HIT BLUE JEWEL");
+        }
+
+        if (robot.isBallBlue()){
+            telemetry.addData("  I see the blue ball  ", "HIT RED JEWEL");
+        }
+        else {
+            telemetry.addData("  I see the red ball  ", "HIT BLUE JEWEL");
+        }
+        robot.jewelArm.setPosition(1);
+        telemetry.update();
+        sleep(5000);
+
         // Step through each leg of the path,
         // Note: Reverse movement is obtained by setting a negative distance (not speed)
         encoderDrive(DRIVE_SPEED,  48,  48, 2.0);  // S1: Forward 47 Inches with 5 Sec timeout
-        twistIt(-90);
+        twistIt(-85);
         encoderDrive(DRIVE_SPEED, 12, 12, 2.0);  // S3: Reverse 24 Inches with 4 Sec timeout
-        twistIt(0);
+        twistIt(-5);
 
         /*
         robot.leftClaw.setPosition(1.0);            // S4: Stop and close the claw.
@@ -316,14 +327,14 @@ public class RecovererAuto extends LinearOpMode {
 
         //newHeading = (newHeading - headingAdjuster) % 360;
 
-        if (newHeading < 1)
+        if (newHeading - heading < 1)
         {
             robot.ldFront.setPower(TURN_SPEED);
             robot.ldBack.setPower(TURN_SPEED);
             robot.rdFront.setPower(TURN_SPEED);
             robot.rdBack.setPower(TURN_SPEED);
         }
-        else if (newHeading > 0)
+        else if (newHeading - heading> 0)
         {
             robot.ldFront.setPower(-TURN_SPEED);
             robot.ldBack.setPower(-TURN_SPEED);
