@@ -88,8 +88,8 @@ public class HardwareRecoverer
 
 
     public static final double MID_SERVO       =  0.6 ;
-    public static final double ARM_UP_POWER    =  0.45 ;
-    public static final double ARM_DOWN_POWER  = -0.45 ;
+    public static final double ARM_UP_POWER    =  0.25 ;
+    public static final double ARM_DOWN_POWER  = -0.25 ;
 
     /* local OpMode members. */
     HardwareMap hwMap           =  null;
@@ -138,7 +138,7 @@ public class HardwareRecoverer
 
         arm.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
-        arm.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        //arm.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
         ldFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         rdFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);

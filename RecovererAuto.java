@@ -103,14 +103,16 @@ public class RecovererAuto extends LinearOpMode {
     static final double     WHEEL_DIAMETER_INCHES   = 4.0 ;     // For figuring circumference
     static final double     COUNTS_PER_INCH         = (COUNTS_PER_MOTOR_REV * DRIVE_GEAR_REDUCTION) /
                                                       (WHEEL_DIAMETER_INCHES * 3.1415);
-    static final double     DRIVE_SPEED             = 0.3;
-    static final double     TURN_SPEED              = 0.3;
+    static final double     DRIVE_SPEED             = 0.15;
+    static final double     TURN_SPEED              = 0.15;
 
     double heading;
     double headingAdjuster;
     double directionTo;
+    double colorTeam = -1;
+    double colorMult = 1;
 
-    static final double     BLUE_THRESHOLD          =  18;
+    //static final double     BLUE_THRESHOLD          =  30;
 
     @Override
     public void runOpMode() {
@@ -140,7 +142,7 @@ public class RecovererAuto extends LinearOpMode {
         telemetry.update();
 
         telemetry.addData("Board Sensor Val ", robot.boardColorSensor.blue());
-        if (robot.boardColorSensor.blue() >= BLUE_THRESHOLD) {
+        if (robot.boardColorSensor.red() < robot.boardColorSensor.blue()) {
             robot.setBoardBlue(Boolean.TRUE);
             telemetry.addData("  ", "BLUE TEAM");
         } else {
@@ -150,20 +152,6 @@ public class RecovererAuto extends LinearOpMode {
 
         }
 
-
-        /****************************************************************
-         * TODO:  Add code to lower jewel arm, turn robot correct direction and
-         *        then raise the jewel arm prior to placing glyph.  The code below
-         *        can be used to determine which jewel to knock off.
-         */
-        robot.jewelArm.setPosition(.5);
-
-        if (robot.ballColorSensor.blue() >= BLUE_THRESHOLD) {
-            robot.setBallBlue(Boolean.TRUE);
-
-        } else {
-            robot.setBallBlue(Boolean.FALSE);
-        }
 
         robot.ldFront.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         robot.rdFront.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -182,6 +170,9 @@ public class RecovererAuto extends LinearOpMode {
                             robot.ldFront.getCurrentPosition(),
                             robot.ldFront.getCurrentPosition(),
                             robot.ldBack.getCurrentPosition());
+
+        telemetry.addData("I see ", robot.ballColorSensor.blue());
+
         telemetry.update();
 
         // Wait for the game to start (driver presses PLAY)
@@ -190,31 +181,34 @@ public class RecovererAuto extends LinearOpMode {
         //angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
         //headingAdjuster = Double.parseDouble(formatAngle(angles.angleUnit, angles.firstAngle));
 
-
-        if (robot.isBoardBlue()^robot.isBallBlue()) {
-            encoderDrive(DRIVE_SPEED, -3 , -3, 2.0);
-        } else {
-            encoderDrive(DRIVE_SPEED, 3 , 3, 2.0);
-            telemetry.addData("   ", "HIT BLUE JEWEL");
-        }
-
-        if (robot.isBallBlue()){
-            telemetry.addData("  I see the blue ball  ", "HIT RED JEWEL");
-        }
-        else {
-            telemetry.addData("  I see the red ball  ", "HIT BLUE JEWEL");
-        }
-        robot.jewelArm.setPosition(1);
-        telemetry.update();
-        sleep(5000);
-
         // Step through each leg of the path,
         // Note: Reverse movement is obtained by setting a negative distance (not speed)
-        encoderDrive(DRIVE_SPEED,  48,  48, 2.0);  // S1: Forward 47 Inches with 5 Sec timeout
-        twistIt(-85);
-        encoderDrive(DRIVE_SPEED, 12, 12, 2.0);  // S3: Reverse 24 Inches with 4 Sec timeout
-        twistIt(-5);
 
+        if (robot.isBoardBlue() == true)
+        {
+            colorTeam = 1;
+            colorMult = 0;
+        }
+        clawOpen(false);
+        sleep(1000);
+        lift("up", 1500);
+        hitBall();
+        encoderDrive(DRIVE_SPEED,  18*colorTeam,  18*colorTeam, 3.0);  // S1: Forward 47 Inches with 5 Sec timeout
+        twistIt(180*colorMult);
+        twistIt(-65 - (90*colorMult));
+        encoderDrive(DRIVE_SPEED, 6, 6, 3.0);  // S3: Reverse 24 Inches with 4 Sec timeout
+        twistIt(-20 + (180*colorMult));
+        encoderDrive(DRIVE_SPEED/3, 7, 7, 4.0);
+        lift("down", 1300);
+        clawOpen(true);
+        encoderDrive(DRIVE_SPEED/3, 7, 7, 4.0);
+
+        /*
+
+        clawOpen(false);
+        encoderDrive(DRIVE_SPEED, 25, 25, 6);
+        clawOpen(true);
+*/
         /*
         robot.leftClaw.setPosition(1.0);            // S4: Stop and close the claw.
         robot.rightClaw.setPosition(0.0);
@@ -334,7 +328,7 @@ public class RecovererAuto extends LinearOpMode {
             robot.rdFront.setPower(TURN_SPEED);
             robot.rdBack.setPower(TURN_SPEED);
         }
-        else if (newHeading - heading> 0)
+        else if (newHeading - heading > 0)
         {
             robot.ldFront.setPower(-TURN_SPEED);
             robot.ldBack.setPower(-TURN_SPEED);
@@ -344,7 +338,7 @@ public class RecovererAuto extends LinearOpMode {
 
         telemetry.addData("DirectionTo", directionTo);
 
-        while (heading > newHeading + 2.5 || heading < newHeading - 2.5)
+        while ((heading > newHeading + 2.5 || heading < newHeading - 2.5) && opModeIsActive())
         {
             angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
             heading = Double.parseDouble(formatAngle(angles.angleUnit, angles.firstAngle));
@@ -362,5 +356,67 @@ public class RecovererAuto extends LinearOpMode {
         robot.rdFront.setPower(0);
         robot.rdBack.setPower(0);
 
+    }
+    public void hitBall() {
+        robot.jewelArm.setPosition(.5);
+
+        sleep(1500);
+
+        double ballColor = robot.ballColorSensor.blue();
+        if (ballColor > robot.ballColorSensor.red()) {
+            robot.setBallBlue(Boolean.TRUE);
+
+        } else {
+            robot.setBallBlue(Boolean.FALSE);
+        }
+
+        if (robot.isBoardBlue() ^ robot.isBallBlue()) {
+            encoderDrive(DRIVE_SPEED, -3, -3, 2.0);
+            robot.jewelArm.setPosition(1);
+            sleep(500);
+            encoderDrive(DRIVE_SPEED, 4, 4, 2.0);
+        } else {
+            encoderDrive(DRIVE_SPEED, 3, 3, 2.0);
+            robot.jewelArm.setPosition(1);
+            sleep(500);
+            encoderDrive(DRIVE_SPEED, -4, -4, 2.0);
+        }
+
+        if (robot.isBallBlue()) {
+            telemetry.addData("  I see the blue ball  ", ballColor);
+        } else {
+            telemetry.addData("  I see the red ball  ", ballColor);
+        }
+
+        telemetry.update();
+        sleep(1500);
+    }
+    public void clawOpen(boolean open){
+        if (open)
+        {
+            robot.rightClaw.setPosition(0);
+            robot.leftClaw.setPosition(1);
+        }
+        else
+        {
+            robot.rightClaw.setPosition(1);
+            robot.leftClaw.setPosition(0);
+        }
+
+    }
+    public void lift(String power, int wait)
+    {
+        if (power == "up")
+        {
+            robot.arm.setPower(robot.ARM_UP_POWER);
+            sleep(wait);
+            robot.arm.setPower(0);
+        }
+        else if (power == "down")
+        {
+            robot.arm.setPower(robot.ARM_DOWN_POWER);
+            sleep(wait);
+            robot.arm.setPower(0);
+        }
     }
 }

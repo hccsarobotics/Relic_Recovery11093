@@ -199,6 +199,12 @@ public class RecovererDriveTest extends OpMode{
             hasExecuted = false;
         }
 
+        if (gamepad2.left_bumper && hasExecuted)
+        {
+            armStateOpen = Boolean.TRUE;
+            clawOffset += .25;
+            hasExecuted = false;
+        }
 
         // Move both servos to new position.  Assume servos are mirror image of each other.
         if (hasExecuted == false && gamepad2.right_bumper == false){
@@ -206,18 +212,18 @@ public class RecovererDriveTest extends OpMode{
             robot.leftClaw.setPosition(robot.MID_SERVO + clawOffset);
             robot.rightClaw.setPosition(robot.MID_SERVO - clawOffset);
             hasExecuted = true;
-        }
+       }
 
 
         // Use gamepad buttons to move the arm up (Y) and down (A)
 
         if (gamepad2.y)
         {
-            robot.arm.setPower(-.25);
+            robot.arm.setPower(robot.ARM_UP_POWER);
         }
         else if (gamepad2.a)
         {
-            robot.arm.setPower(.25);
+            robot.arm.setPower(-robot.ARM_UP_POWER);
         }
         else
         {
@@ -240,7 +246,7 @@ public class RecovererDriveTest extends OpMode{
         {
             robot.arm.setPower(0);
         }
-        */
+*/
 
         if (gamepad2.dpad_down)
         {
